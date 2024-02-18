@@ -1,5 +1,6 @@
 const express = require('express');
 const app =express();
+const mongoose = require('mongoose');
 const bodyParser = require ('body-parser');
 const cookieParser = require('cookie-parser');
 
@@ -21,6 +22,7 @@ app.listen(PORT, () =>{
 
 app.get("/",(req,res) => {
     res.send("<h1>Code Fiesta</h1>")
+    
 })
 
 

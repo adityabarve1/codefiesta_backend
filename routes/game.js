@@ -21,8 +21,8 @@ const verifyToken = (req, res, next) => {
 };
 
 router.get('/questions',verifyToken,gameController.getQuestions);
-router.post('/submit-answer',verifyToken,gameController.submitAnswers);
+router.post('/submit-answers',verifyToken,gameController.submitAnswers)
 router.post('/start-game',gameController.startGame);
-router.post('/manual-submit',verifyToken,gameController.manualSubmit);
+
 
 module.exports = router;

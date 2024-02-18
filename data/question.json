@@ -1,0 +1,48 @@
+ 
+{
+   "questions":[
+        {
+            "id": "1",
+            "question": "Arrange the code ",
+            "code": [ 
+                "<html>", 
+                "<head>", 
+                "<title>Your Title</title>", 
+                "</head>", 
+                "<body>", 
+                "<h1>Hello, World!</h1>", 
+                "</body>", 
+                "</html>" 
+              ], 
+            "answer": [ 
+                "1632" 
+            ]
+        },
+        {
+            "id": 2,
+            "question": "Rearrange the code.",
+            "code": [ 
+                "p {", 
+                "  color: blue;", 
+                "}" 
+            ], 
+            "answer": [ 
+               "1432"
+            ]
+        },
+        {
+            "id": 3,
+            "question": "Arrange the code to declare a class named 'Person' with a constructor in Java.",
+            "code": [ 
+                "def bubble_sort(arr):", 
+                "  n = len(arr)", 
+                "  for i in range(n):", 
+                "    for j in range(0, n-i-1):", 
+                "      if arr[j] > arr[j+1]:", 
+                "        arr[j], arr[j+1] = arr[j+1], arr[j]" 
+            ], 
+            "answer": [ 
+                "1532"]
+        }
+    ]
+}

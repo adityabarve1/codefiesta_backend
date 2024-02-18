@@ -1,53 +1,39 @@
 const jwt = require('jsonwebtoken'); 
 const Player = require('../models/player'); 
-const { getQuestions } = require('../data/question'); 
+const Question = require('../models/questions') 
  
 // Secret key for JWT 
 const secretKey = 'your_secret_key'; 
  
 // Fetch questions 
-exports.getQuestions = (req, res) => { 
-    try { 
-        const questions = getQuestions().map(question => ({
-            id:question.id,
-            question:question.question,
-            code:question.code,
-        })); 
-        res.json({ questions }); 
-    }catch (err) { 
-        res.status(500).json({ error: err.message }); 
-    } 
-}; 
- 
-// Submit answers and check sequence 
-exports.submitAnswers = async (req, res) => { 
+exports.getQuestions = async (req, res) => { 
   try { 
     const playerId = req.playerId; 
-    const { answers } = req.body; 
-     
-    // Get questions to check against answers 
-    const questions = getQuestions(); 
  
-    // Logic to check if the answers are in the correct sequence 
-    const isCorrectSequence = questions.every((question, index) => { 
-      return question.answer.toString() === answers[index]; 
-    }); 
- 
-    // Update player's answers and calculate duration 
+    // Fetch player record 
     const player = await Player.findById(playerId); 
     if (!player) { 
       return res.status(404).json({ error: 'Player not found' }); 
     } 
  
-    player.answers = answers; 
-    player.submittedAt = new Date(); 
-    player.duration = Math.round((player.submittedAt - player.startTime) / 1000); // Duration in seconds 
+    // Get the progress index to fetch the next question 
+    const progressIndex = player.progress; 
+ 
+    // Fetch the next question 
+    const question = await Question.findOne().skip(progressIndex).exec(); 
+    if (!question) { 
+      // No more questions, you can handle this case as needed 
+      return res.json({ message: 'No more questions' }); 
+    } 
+ 
+    // Increment the progress index for the next request 
+    player.progress += 1; 
     await player.save(); 
  
-    res.json({ isCorrectSequence }); 
-  } catch (err) { 
+    res.json({ question }); 
+  }catch (err) { 
     res.status(500).json({ error: err.message }); 
-  } 
+  }
 }; 
  
 // Start the game 
@@ -57,31 +43,46 @@ exports.startGame = async (req, res) => {
     const player = await Player.create({ email, startTime: new Date() }); 
  
     // Create JWT token 
-    const token = jwt.sign({ playerId: player._id }, secretKey, { expiresIn: '7m' }); // Expires in 7 minutes 
+    const token = jwt.sign({ playerId: player._id }, secretKey, { expiresIn: '16m' }); // Expires in 16 minutes 
  
     res.cookie('jwt_token', token, { httpOnly: true }); 
     res.status(201).json({ playerId: player._id }); 
   } catch (err) { 
     res.status(500).json({ error: err.message }); 
   } 
-}; 
+};
  
 // Manually submit answers 
-exports.manualSubmit = async (req, res) => { 
+exports.submitAnswers = async (req, res) => { 
   try { 
     const playerId = req.playerId; 
-    const { answers } = req.body; 
-     
-    // Update player's answers 
+    const { questionId , playerAnswers } = req.body; 
+ 
+    // Get questions to check against answers 
+    const question = await Question.findById(questionId); 
+    if (!question) { 
+      return res.status(404).json({ error: 'Question not found' }); 
+    } 
+ 
+    // Check if the player's answer matches the correct answer sequence 
+    const isCorrect = (playerAnswer === question.answerSequence);
+
+
+    // Update player's answers and store correctness 
     const player = await Player.findById(playerId); 
     if (!player) { 
       return res.status(404).json({ error: 'Player not found' }); 
     } 
  
-    player.answers = answers; 
+    player.sequenceAnswers.push({
+      questionId,
+      correctAnswer:question.answerSequence,
+      playerAnswer,
+      isCorrect
+    }); 
     player.submittedAt = new Date(); 
     player.duration = Math.round((player.submittedAt - player.startTime) / 1000); // Duration in seconds 
-    await player.save(); 
+    await player.save();
  
     res.json({ message: 'Answers submitted successfully' }); 
   } catch (err) { 
